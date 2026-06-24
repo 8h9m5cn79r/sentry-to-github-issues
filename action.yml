@@ -1,0 +1,63 @@
+name: "Sentry → GitHub Issues"
+description: "Poll Sentry and open a deduplicated GitHub issue (with stack trace) for each new Sentry issue. No Sentry Business plan required."
+author: "caezium"
+branding:
+  icon: "alert-triangle"
+  color: "red"
+
+inputs:
+  sentry_org:
+    description: "Sentry organization slug."
+    required: true
+  sentry_projects:
+    description: "Space-separated Sentry project slug(s) to watch."
+    required: true
+  sentry_auth_token:
+    description: "Sentry read-only auth token. Scopes: project:read, event:read, org:read."
+    required: true
+  sentry_host:
+    description: "Sentry base URL. Set this for a self-hosted Sentry."
+    required: false
+    default: "https://sentry.io"
+  query:
+    description: "Sentry issue search query."
+    required: false
+    default: "is:unresolved"
+  lookback_hours:
+    description: "Only file issues first seen within this many hours."
+    required: false
+    default: "24"
+  max_per_run:
+    description: "Maximum issues to create per run (backlog guard)."
+    required: false
+    default: "25"
+  label:
+    description: "Label applied to filed issues. Created if missing; also used for dedup."
+    required: false
+    default: "sentry"
+  repo:
+    description: "Target repo (owner/name) to file issues in."
+    required: false
+    default: ${{ github.repository }}
+  github_token:
+    description: "GitHub token with issues:write on the target repo."
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Poll Sentry and file GitHub issues
+      shell: bash
+      env:
+        SENTRY_HOST: ${{ inputs.sentry_host }}
+        SENTRY_ORG: ${{ inputs.sentry_org }}
+        SENTRY_PROJECTS: ${{ inputs.sentry_projects }}
+        SENTRY_QUERY: ${{ inputs.query }}
+        LOOKBACK_HOURS: ${{ inputs.lookback_hours }}
+        MAX_PER_RUN: ${{ inputs.max_per_run }}
+        ISSUE_LABEL: ${{ inputs.label }}
+        SENTRY_AUTH_TOKEN: ${{ inputs.sentry_auth_token }}
+        GH_REPO: ${{ inputs.repo }}
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: bash "$GITHUB_ACTION_PATH/sentry-issues.sh"

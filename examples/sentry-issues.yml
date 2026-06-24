@@ -1,0 +1,38 @@
+# Copy this to .github/workflows/sentry-issues.yml in the project you want to
+# watch, then set its SENTRY_AUTH_TOKEN secret (see the action README). Fill in
+# sentry_org + sentry_projects and you're done.
+name: sentry-issues
+
+on:
+  schedule:
+    - cron: "17,47 * * * *"   # every 30 min, off the rush. GitHub cron is UTC.
+  workflow_dispatch:
+    inputs:
+      query:
+        description: "Sentry issue search query"
+        default: "is:unresolved"
+      lookback_hours:
+        description: "Only file issues first seen within this many hours"
+        default: "24"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  # Never let two runs file at once (they'd race the dedup read).
+  group: sentry-issues
+  cancel-in-progress: false
+
+jobs:
+  file:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: caezium/sentry-to-github-issues@v1
+        with:
+          sentry_org: your-org-slug
+          sentry_projects: "your-project"          # space-separated for several
+          sentry_auth_token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          query: ${{ github.event.inputs.query || 'is:unresolved' }}
+          lookback_hours: ${{ github.event.inputs.lookback_hours || '24' }}
