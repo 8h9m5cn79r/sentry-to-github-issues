@@ -1,5 +1,5 @@
 name: "Sentry → GitHub Issues"
-description: "Poll Sentry and open a deduplicated GitHub issue (with stack trace) for each new Sentry issue. No Sentry Business plan required."
+description: "File a deduplicated GitHub issue (with stack trace) for each new Sentry issue. No Sentry Business plan needed."
 author: "caezium"
 branding:
   icon: "alert-triangle"
